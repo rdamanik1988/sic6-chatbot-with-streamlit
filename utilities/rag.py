@@ -2,16 +2,13 @@ from langgraph.graph import START, StateGraph
 import faiss
 from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import (ChatGoogleGenerativeAI,
-                                    GoogleGenerativeAIEmbeddings)
 from langchain import hub
-
-# Initialize State
-
 from langchain_core.documents import Document
 from typing_extensions import List, TypedDict
 from langchain_groq import ChatGroq
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 
+# Initialize State
 
 class State(TypedDict):
     question: str
@@ -24,8 +21,16 @@ class RAG:
         self.graph_builder.add_edge(START, "retrieve")
         self.graph = self.graph_builder.compile()
         
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-        self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+        # Mengganti GoogleGenerativeAIEmbeddings dengan HuggingFaceBgeEmbeddings
+        # GROQ API tidak menyediakan embedding, jadi kita gunakan model embedding open-source
+        self.embeddings = HuggingFaceBgeEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+        
+        # Mengganti ChatGoogleGenerativeAI dengan ChatGroq
+        # API key dilewatkan langsung sebagai argumen
+        self.llm = ChatGroq(
+            model_name="llama3-8b-8192",
+            groq_api_key="<ganti dengan GROQ API Key anda>"
+        )
 
         self.prompt = hub.pull("rlm/rag-prompt")
         self.vector_store = None
